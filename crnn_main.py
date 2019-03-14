@@ -1,11 +1,7 @@
 import argparse
-import random
 import torch
-import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
-# from warpctc_pytorch import CTCLoss
-import numpy as np
 import os
 import utils
 import dataset
@@ -13,9 +9,6 @@ import dataset
 import models.crnn as crnn
 #
 import time
-# wait = 2400
-# print('waiting {0} min'.format(wait/60))
-# time.sleep(wait)
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
@@ -67,7 +60,6 @@ nclass = len(opt.alphabet) + 1
 nc = 1
 
 converter = utils.strLabelConverter(opt.alphabet)
-# criterion = CTCLoss()
 criterion = torch.nn.CTCLoss()
 
 
