@@ -4,10 +4,8 @@ from create_dataset import createDataset
 
 def synth_90k():
     root_dir = '/workspace/datasets/TR/synth90k/90kDICT32px/'
-    train_txt_name = 'annotation_train1.txt'    # Remove corrupted images from 'annotation_train.txt'
-    val_txt_name = 'annotation_val1.txt'
-    # train_txt_name = 'annotation_trainTmp.txt'
-    # val_txt_name = 'annotation_trainTmp.txt'
+    train_txt_name = 'annotation_train.txt'
+    val_txt_name = 'annotation_val.txt'
 
     def getList(txt_name):
         txt_name = os.path.join(root_dir, txt_name)
