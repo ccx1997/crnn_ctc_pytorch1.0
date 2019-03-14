@@ -1,21 +1,14 @@
 import argparse
-import random
 import torch
-import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
-# from warpctc_pytorch import CTCLoss
-import numpy as np
 import os
 import utils
 import dataset
 
 import models.crnn as crnn
-#
+
 import time
-# wait = 2400
-# print('waiting {0} min'.format(wait/60))
-# time.sleep(wait)
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
@@ -45,8 +38,6 @@ if opt.experiment is None:
     opt.experiment = 'param'
 os.system('mkdir {0}'.format(opt.experiment))
 
-# cudnn.benchmark = True
-
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
@@ -67,7 +58,6 @@ nclass = len(opt.alphabet) + 1
 nc = 1
 
 converter = utils.strLabelConverter(opt.alphabet)
-# criterion = CTCLoss()
 criterion = torch.nn.CTCLoss()
 
 
