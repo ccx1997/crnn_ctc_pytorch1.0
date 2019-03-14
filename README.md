@@ -9,5 +9,6 @@ To run a demo, please refer to [Mei](https://github.com/meijieru/crnn.pytorch#ru
 Train a model
 -------------
 To train a model (I used SynthText90k dataset to train), check the details in the code and run like the following steps:
-1. Run ``python saveAsLmdb.py``
-2. Run ``python crnn_main.py --cuda``
+1. Run ``filter.py`` for file ``annotation_train.txt`` and ``annotation_val.txt``.
+2. Run ``python saveAsLmdb.py``.
+3. Run ``python crnn_main.py --cuda``.
