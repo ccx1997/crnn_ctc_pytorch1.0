@@ -7,7 +7,7 @@ import utils
 import dataset
 
 import models.crnn as crnn
-#
+
 import time
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -37,8 +37,6 @@ print(opt)
 if opt.experiment is None:
     opt.experiment = 'data'
 os.system('mkdir {0}'.format(opt.experiment))
-
-# cudnn.benchmark = True
 
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
