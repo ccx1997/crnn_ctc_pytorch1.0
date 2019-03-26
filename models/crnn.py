@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 
@@ -9,8 +10,10 @@ class BidirectionalLSTM(nn.Module):
         self.rnn = nn.LSTM(nIn, nHidden, bidirectional=True)
         self.embedding = nn.Linear(nHidden * 2, nOut)
 
-    def forward(self, input):
+    def forward(self, input, residual=False):
         recurrent, _ = self.rnn(input)
+        if residual:
+            recurrent = recurrent + input
         T, b, h = recurrent.size()
         t_rec = recurrent.view(T * b, h)
 
@@ -22,7 +25,7 @@ class BidirectionalLSTM(nn.Module):
 
 class CRNN(nn.Module):
 
-    def __init__(self, imgH, nc, nclass, nh, n_rnn=2, leakyRelu=False):
+    def __init__(self, imgH, nc, nclass, nh, leakyRelu=False):
         super(CRNN, self).__init__()
         assert imgH % 16 == 0, 'imgH has to be a multiple of 16'
 
@@ -74,6 +77,15 @@ class CRNN(nn.Module):
         conv = conv.permute(2, 0, 1)  # [w, b, c]
 
         # rnn features
-        output = self.rnn(conv)  # [w, b, nclass]
+        output = self.rnn[0](conv, residual=False)   # Take (CNN output + RNN output) as input of embedding layer
+        output = self.rnn[1](output)  # [w, b, nclass]
 
         return output
+
+
+if __name__ == "__main__":
+    x = torch.rand(2, 1, 32, 100).cuda()
+    net = CRNN(32, 1, 37, 256)
+    net.cuda()
+    y = net(x)
+    print(y.size())

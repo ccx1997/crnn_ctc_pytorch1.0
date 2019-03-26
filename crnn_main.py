@@ -10,7 +10,7 @@ import models.crnn as crnn
 #
 import time
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--trainroot', default='/workspace/datasets/TR/synth90k/train', help='path to dataset')
@@ -21,7 +21,7 @@ parser.add_argument('--imgH', type=int, default=32, help='the height of the inpu
 parser.add_argument('--imgW', type=int, default=100, help='the width of the input image to network')
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
 parser.add_argument('--epoch', type=int, default=10, help='number of epochs to train for')
-parser.add_argument('--lr', type=float, default=0.1, help='learning rate for Critic, default=0.1')
+parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.1')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to crnn (to continue training)")
@@ -35,7 +35,7 @@ opt = parser.parse_args()
 print(opt)
 
 if opt.experiment is None:
-    opt.experiment = 'param'
+    opt.experiment = 'data'
 os.system('mkdir {0}'.format(opt.experiment))
 
 # cudnn.benchmark = True
@@ -170,4 +170,4 @@ for epoch in range(opt.epoch):
 
         # do checkpointing
         if i % opt.saveInterval == 0:
-            torch.save(crnn.state_dict(), '{0}/CRNNCTC.pth'.format(opt.experiment))
+            torch.save(crnn.state_dict(), '{0}/crnn1.pth'.format(opt.experiment))
