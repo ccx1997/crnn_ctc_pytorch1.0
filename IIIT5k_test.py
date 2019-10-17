@@ -44,9 +44,8 @@ def img_transf(image):
     return image.unsqueeze(0)
 
 
-def main(root, error_file='error_samples.txt', alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
+def main(root, param_file, error_file='error_samples.txt', alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
     device = torch.device("cuda:0")
-    param_file = './param/CRNNCTC.pth'
     net = mynet(param_file)
     net.eval()
     net.to(device)
@@ -88,7 +87,8 @@ def main(root, error_file='error_samples.txt', alphabet='0123456789abcdefghijklm
 
 
 if __name__ == "__main__":
-    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
     root = '/workspace/datasets/TR/IIIT5K/'
+    param_file = './param/crnn1.pth'
     # testset_gt(root)
-    main(root)
+    main(root, param_file)
