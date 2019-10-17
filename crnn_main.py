@@ -3,11 +3,12 @@ import torch
 import torch.optim as optim
 import torch.utils.data
 import os
+import random
 import utils
 import dataset
 
 import models.crnn as crnn
-
+#
 import time
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -20,8 +21,8 @@ parser.add_argument('--batchSize', type=int, default=128, help='input batch size
 parser.add_argument('--imgH', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--imgW', type=int, default=100, help='the width of the input image to network')
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--epoch', type=int, default=10, help='number of epochs to train for')
-parser.add_argument('--lr', type=float, default=1.0, help='learning rate, default=1.0')
+parser.add_argument('--epoch', type=int, default=20, help='number of epochs to train for')
+parser.add_argument('--lr', type=float, default=1.0, help='learning rate for Critic, default=0.1')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to crnn (to continue training)")
@@ -29,14 +30,16 @@ parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopq
 parser.add_argument('--experiment', default=None, help='Where to store samples and models')
 parser.add_argument('--displayInterval', type=int, default=50, help='Interval to be displayed')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
-parser.add_argument('--valInterval', type=int, default=500, help='Interval to be displayed')
-parser.add_argument('--saveInterval', type=int, default=250, help='Interval to be displayed')
+parser.add_argument('--valInterval', type=int, default=1000, help='Interval to be displayed')
+parser.add_argument('--saveInterval', type=int, default=250, help='Interval to be saved')
 opt = parser.parse_args()
 print(opt)
 
 if opt.experiment is None:
-    opt.experiment = 'data'
+    opt.experiment = 'param'
 os.system('mkdir {0}'.format(opt.experiment))
+
+# cudnn.benchmark = True
 
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
@@ -58,7 +61,7 @@ nclass = len(opt.alphabet) + 1
 nc = 1
 
 converter = utils.strLabelConverter(opt.alphabet)
-criterion = torch.nn.CTCLoss()
+criterion = torch.nn.CTCLoss(reduction='mean')
 
 
 # custom weights initialization called on crnn
@@ -88,7 +91,7 @@ loss_avg = utils.averager()
 # setup optimizer
 # optimizer = optim.Adam(crnn.parameters(), lr=opt.lr, weight_decay=1e-4)
 optimizer = optim.Adadelta(crnn.parameters(), lr=opt.lr)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2000, gamma=0.3)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=12000, gamma=0.3)
 
 
 def val(net, data_loader, criterion, max_iter=100):
@@ -135,10 +138,12 @@ def trainBatch():
     image = image.to(device)
     image.requires_grad_()
     batch_size = image.size(0)
-
     preds = crnn(image)
+    preds = torch.clamp(preds, min=-50.0)
+    if random.random() < 0.01:
+        print(preds[5, 0, :].topk(3))
     preds_size = torch.IntTensor([preds.size(0)] * batch_size)
-    cost = criterion(preds, text, preds_size, length)
+    cost = criterion(preds.log_softmax(2), text, preds_size, length)
     optimizer.zero_grad()
     cost.backward()
     optimizer.step()
@@ -148,9 +153,9 @@ def trainBatch():
 for epoch in range(opt.epoch):
     train_iter = iter(train_loader)
     i = 0
-
     while i < len(train_loader):
         scheduler.step()
+        
         if optimizer.param_groups[0]['lr'] < 1e-4:
             optimizer.param_groups[0]['lr'] = 1e-2
         time0 = time.time()
@@ -166,6 +171,5 @@ for epoch in range(opt.epoch):
         if i % opt.valInterval == 0:
             val(crnn, test_loader, criterion)
 
-        # do checkpointing
         if i % opt.saveInterval == 0:
             torch.save(crnn.state_dict(), '{0}/crnn1.pth'.format(opt.experiment))
